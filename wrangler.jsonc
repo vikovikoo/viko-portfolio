@@ -1,5 +1,6 @@
 {
-  "name": "raspy-art-3c90",
+  "name": "viko-digital-artist",
   "compatibility_date": "2026-11-01",
+  "workers_dev": false,
   "assets": { "directory": "./" }
 }
