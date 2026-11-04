@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viko - Digital Illustrator</title>
+
+  <!-- Fonts (load from Google Fonts, so you need to be online to see them):
+       Playfair Display = the fancy serif    Anton = the heavy condensed type
+       Oswald = small condensed labels       JetBrains Mono = the typewriter-style text -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500&family=Oswald:wght@300;400;500&family=Playfair+Display:wght@800&display=swap" rel="stylesheet">
+
+  <!-- ============================================================
+       CSS: the look of the site.
+       (When you split into separate files later, this goes in style.css)
+       ============================================================ -->
+  <style>
+    /* ---------- COLORS & FONTS ----------
+       Change a color here and it changes everywhere on the site. */
+    :root {
+      --ink: #0e0a22;            /* the deep dark background */
+      --violet: #3d11a0;         /* the purple about band */
+      --violet-bright: #5b2be0;  /* big serif title */
+      --violet-soft: #9b7bff;
+      --accent: #cd4c46;         /* the red accent (your red) */
+      --accent-soft: #ff9a90;    /* a lighter tint of it, for small text on the purple band */
+      --on-accent: #ffffff;      /* text that sits on top of the red */
+      --accent-glow: #ff6b5f;    /* the brighter red things turn into when you hover over them */
+      --text: #f1eeff;
+      --muted: #a9a2d0;
+
+      --overlap: clamp(80px, 13vw, 200px);   /* how far your photo climbs up into the hero */
+
+
+      --font-serif: "Playfair Display", Georgia, serif;
+      --font-big: "Anton", "Impact", "Arial Narrow", sans-serif;
+      --font-label: "Oswald", "Arial Narrow", sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, "Courier New", monospace;
+
+      /* The speckled "grain" texture used inside the big letters */
+      --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.3 -.66'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ---------- RESET: removes the browser's default spacing ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--text);
+      background: var(--ink);
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Paragraphs are in capital letters, like your Behance */
+    p {
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .hl {
+      color: var(--accent);   /* a highlighted piece of text */
+    }
+
+    /* on the purple band plain red is hard to read, so the highlights use a lighter red */
+    .about-band .hl {
+      color: var(--accent-soft);
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+
+    /* ---------- TOP BAR: red bars on the sides, menu in the middle ---------- */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 20px 0;
+      background: var(--ink);
+      transition: box-shadow 0.3s;
+    }
+
+    /* JavaScript adds this once you scroll down a little */
+    .site-header.scrolled {
+      box-shadow: 0 1px 0 rgba(205, 76, 70, 0.4);
+    }
+
+    .bar {
+      flex: 1;
+      height: 10px;
+      background: var(--accent);
+    }
+
+    .bar:first-child { border-radius: 0 6px 6px 0; }
+    .bar:last-child  { border-radius: 6px 0 0 6px; }
+
+    nav {
+      display: flex;
+      gap: 30px;
+    }
+
+    nav a {
+      position: relative;
+      font-family: var(--font-label);
+      font-weight: 400;
+      font-size: 1.05rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--accent);
+      line-height: 1.4;
+    }
+
+    /* Underline that grows on hover */
+    nav a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    nav a:hover::after,
+    nav a:focus-visible::after {
+      width: 100%;
+    }
+
+    /* ---------- HERO ----------
+       A dark moody picture with the big title on top.
+       To use your own illustration: save it as images/hero.jpg
+       (the dark overlay is added automatically).
+       Until then you get dark purple glows instead. */
+    .hero {
+      position: relative;
+      overflow: hidden;          /* keeps the floating doodles inside the hero */
+      padding: clamp(40px, 8vw, 90px) 40px calc(var(--overlap) + 40px);
+      background:
+        linear-gradient(180deg, rgba(14, 10, 34, 0.55), rgba(14, 10, 34, 0.9)),
+        url("images/hero.jpg") center / cover no-repeat,
+        radial-gradient(circle at 82% 24%, rgba(155, 123, 255, 0.28), transparent 30%),
+        radial-gradient(circle at 12% 78%, rgba(61, 17, 160, 0.6), transparent 42%),
+        var(--ink);
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;               /* the title sits on top of the doodles */
+      max-width: 1300px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+
+    .year {
+      font-family: var(--font-label);
+      font-weight: 400;
+      font-size: clamp(1.2rem, 2.2vw, 1.9rem);
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: clamp(8px, 3vw, 36px);
+      text-transform: none;
+    }
+
+    .hero h1 {
+      font-weight: 400;      /* we set weights on the pieces below */
+      line-height: 1;
+    }
+
+    /* Each letter is its own <span> (JavaScript makes them) so it can move alone */
+    .split span {
+      display: inline-block;
+      cursor: default;
+      /* each letter appears once when the page loads, one after the other */
+      animation: appear 0.8s cubic-bezier(0.3, 1.5, 0.5, 1) backwards;
+      animation-delay: calc(var(--i) * 70ms + 150ms);
+      transition: transform 0.35s cubic-bezier(0.3, 1.8, 0.5, 1);
+    }
+
+    @keyframes appear {
+      from {
+        opacity: 0;
+        transform: translateY(0.35em) rotate(4deg);
+      }
+    }
+
+    /* The serif word: "Viko" */
+    .serif {
+      position: relative;
+      z-index: 2;                 /* sits on top of the big white word */
+      display: block;
+      font-family: var(--font-serif);
+      font-weight: 800;
+      font-size: clamp(5.5rem, 20vw, 16rem);
+      line-height: 0.85;
+      letter-spacing: -0.01em;
+    }
+
+    .serif span {
+      color: transparent;
+      background-image: var(--grain), linear-gradient(var(--violet-bright), var(--violet-bright));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-stroke: 2px #cfc2ff;
+      padding: 0 0.01em;
+    }
+
+    /* The big white word: "PORTFOLIO" */
+    .condensed {
+      display: block;
+      margin-top: -0.3em;
+      margin-left: 22%;
+      font-family: var(--font-big);
+      font-size: clamp(3.4rem, 16.5vw, 14rem);
+      line-height: 1.05;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .condensed span {
+      color: transparent;
+      background-image: var(--grain), linear-gradient(#f4f2ff, #f4f2ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+
+    /* Hover: the letter hops up, tilts and turns red */
+    .split span:hover {
+      transform: translateY(-0.08em) rotate(-6deg) scale(1.05);
+      background-image: var(--grain), linear-gradient(var(--accent), var(--accent));
+      -webkit-text-stroke-color: var(--accent);
+    }
+
+    /* The small label with the diagonal line + dot, like your Behance */
+    .role {
+      position: relative;
+      align-self: flex-start;
+      margin-left: 22%;
+      margin-top: 18px;
+      font-family: var(--font-label);
+      font-weight: 400;
+      font-size: clamp(1rem, 1.9vw, 1.6rem);
+      letter-spacing: 0.02em;
+      color: var(--accent);
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .role .line {
+      position: absolute;
+      right: calc(100% + 14px);
+      top: 50%;
+      width: 13vw;
+      max-width: 190px;
+      height: 2px;
+      background: var(--accent);
+      transform-origin: right center;
+      transform: rotate(-52deg);
+    }
+
+    .role .line::before {
+      content: "";
+      position: absolute;
+      left: -8px;
+      top: -7px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+
+    /* ---------- FLOATING DOODLES (hero decoration) ----------
+       Little sparkles and squiggles that drift slowly and
+       shift a bit when you move your mouse over the hero. */
+    .doodle {
+      position: absolute;
+      z-index: 0;
+      pointer-events: none;
+      transition: transform 0.6s ease-out;   /* smooth mouse-follow */
+    }
+
+    .doodle svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+      animation: bob var(--dur, 6s) ease-in-out infinite alternate;
+    }
+
+    @keyframes bob {
+      from { transform: translateY(0) rotate(-5deg); }
+      to   { transform: translateY(-14px) rotate(7deg); }
+    }
+
+    /* ---------- SPINNING BADGE ---------- */
+    .badge {
+      position: absolute;
+      z-index: 2;
+      top: clamp(64px, 8vw, 120px);
+      right: clamp(16px, 6vw, 110px);
+      width: clamp(84px, 11vw, 160px);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      transition: transform 0.4s cubic-bezier(0.3, 1.8, 0.5, 1);
+    }
+
+    .badge:hover,
+    .badge:focus-visible {
+      transform: scale(1.08) rotate(-6deg);
+    }
+
+    .badge-ring {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      animation: spin 20s linear infinite;
+    }
+
+    .badge-ring text {
+      font-family: var(--font-label);
+      font-weight: 500;
+      font-size: 15px;
+      fill: currentColor;
+      text-transform: uppercase;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .badge-core {
+      width: 42%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--on-accent);
+      display: grid;
+      place-items: center;
+    }
+
+    .badge-core svg {
+      width: 46%;
+      height: 46%;
+      transition: transform 0.35s cubic-bezier(0.3, 1.8, 0.5, 1);
+    }
+
+    .badge:hover .badge-core svg {
+      transform: translateY(4px);   /* the arrow nudges down: "scroll to the work" */
+    }
+
+    /* ---------- ABOUT BAND (purple, with your photo) ---------- */
+    .about-band {
+      position: relative;
+      z-index: 2;
+      background: var(--violet);
+    }
+
+    .about-grid {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 40px;
+      display: grid;
+      grid-template-columns: minmax(230px, 52%) 1fr;
+      gap: 56px;
+      align-items: end;
+    }
+
+    /* Your photo (images/me.png). The white "sticker" outline is part of the picture itself. */
+    .portrait {
+      margin-top: calc(var(--overlap) * -1);
+      align-self: end;
+      padding: 6px 6px 0;      /* room for the white outline on top and sides */
+      overflow: hidden;        /* ...but cut it off at the bottom, so the photo sits flush */
+    }
+
+    .portrait img {
+      display: block;
+      width: 100%;
+      height: auto;
+      margin-bottom: -6px;
+      transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+    }
+
+    /* The stand-in silhouette gets its outline from CSS (your real photo already has one) */
+    .portrait img.is-placeholder {
+      filter:
+        drop-shadow(5px 0 0 #fff)
+        drop-shadow(-5px 0 0 #fff)
+        drop-shadow(0 5px 0 #fff)
+        drop-shadow(0 -5px 0 #fff);
+    }
+
+    .portrait:hover img {
+      transform: rotate(-2deg) scale(1.02);
+    }
+
+    .about-text {
+      align-self: center;
+      padding: 72px 0;
+      max-width: 560px;
+    }
+
+    .about-text p + p {
+      margin-top: 1.4em;
+    }
+
+    /* The red strip at the bottom that fades to dark */
+    .strip {
+      position: relative;
+      z-index: 1;
+      height: 70px;
+      background: linear-gradient(180deg, var(--accent) 0, var(--accent) 14px, var(--ink) 100%);
+    }
+
+
+    /* ---------- SECTIONS (shared layout) ---------- */
+    .section {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 80px 40px;
+    }
+
+    .section[id] {
+      scroll-margin-top: 50px;
+    }
+
+    .narrow {
+      max-width: 700px;
+      margin-left: max(40px, calc((100% - 1300px) / 2 + 40px));
+      margin-right: auto;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    h2 {
+      width: fit-content;
+      font-family: var(--font-big);
+      font-weight: 400;
+      font-size: clamp(2.6rem, 7vw, 5rem);
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.01em;
+    }
+
+    /* A little red squiggle under every heading */
+    h2::after {
+      content: "";
+      display: block;
+      width: 120px;
+      height: 14px;
+      margin: 14px 0 20px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='14'%3E%3Cpath d='M0 7 Q10 -1 20 7 T40 7' fill='none' stroke='%23cd4c46' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x;
+    }
+
+    .lede {
+      color: var(--muted);
+      margin-bottom: 40px;
+    }
+
+    /* ---------- GALLERY ----------
+       The gallery sits on its own slightly lighter band with a soft purple glow,
+       so the pieces stand out from the page. */
+    .gallery-band {
+      background:
+        radial-gradient(ellipse 70% 45% at 50% 0%, rgba(91, 43, 224, 0.3), transparent 75%),
+        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(91, 43, 224, 0.18), transparent 75%),
+        #150f38;
+      border-top: 1px solid rgba(155, 123, 255, 0.2);
+      border-bottom: 1px solid rgba(155, 123, 255, 0.2);
+    }
+
+    /* JavaScript (section 4 below) builds the columns and puts each picture into
+       whichever column is currently the shortest, so there are no empty gaps.
+       Every picture keeps its own shape. */
+    .gallery {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+    }
+
+    .gallery-col {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .art {
+      position: relative;
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: zoom-in;
+      font: inherit;
+      /* a thin light edge and a deep shadow lift each piece off the background */
+      outline: 1px solid rgba(255, 255, 255, 0.16);
+      outline-offset: -1px;
+      box-shadow: 0 18px 38px rgba(0, 0, 0, 0.5);
+      transition: transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1), box-shadow 0.3s, opacity 0.35s, filter 0.35s;
+    }
+
+    /* While you look at one piece, the others step back a little */
+    @media (hover: hover) {
+      .gallery:hover .art:not(:hover):not(:focus-visible) {
+        opacity: 0.5;
+        filter: saturate(0.75);
+      }
+    }
+
+    /* Hover: the picture lifts up and a colored block appears behind it */
+    .art:hover,
+    .art:focus-visible {
+      transform: translate(-4px, -4px);
+      box-shadow: 8px 8px 0 var(--tint, var(--accent));
+    }
+
+    .art img {
+      display: block;
+      width: 100%;
+      height: auto;
+      transition: transform 0.6s ease;
+    }
+
+    .art:hover img {
+      transform: scale(1.04);
+    }
+
+    /* The title pops up from the bottom on hover */
+    .art .cap {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      padding: 5px 14px;
+      border-radius: 4px;
+      background: var(--accent);
+      color: var(--on-accent);
+      font-family: var(--font-label);
+      font-weight: 500;
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+      line-height: 1.4;
+      text-transform: uppercase;
+      transform: translateY(160%);
+      transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+    }
+
+    .art:hover .cap,
+    .art:focus-visible .cap {
+      transform: translateY(0);
+    }
+
+    /* On touch screens there is no hover, so always show the title */
+    @media (hover: none) {
+      .art .cap { transform: translateY(0); }
+    }
+
+    /* ---------- BIRD COLLECTION ---------- */
+    .bird-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 28px;
+    }
+
+    .bird {
+      padding: 0;
+      border: 0;
+      background: none;
+      font: inherit;
+      color: inherit;
+      text-align: center;
+      cursor: zoom-in;
+    }
+
+    .bird img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;       /* a perfect square. Delete this line to show each picture in its own shape */
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 0 0 0 var(--accent);
+      transition: transform 0.35s cubic-bezier(0.3, 1.8, 0.5, 1), box-shadow 0.25s;
+    }
+
+    /* Hover: the bird hops up, tilts and gets a red ring */
+    .bird:hover img,
+    .bird:focus-visible img {
+      transform: translateY(-12px) rotate(-5deg) scale(1.04);
+      box-shadow: 0 0 0 5px var(--accent);
+    }
+
+    .bird span {
+      display: block;
+      margin-top: 16px;
+      font-family: var(--font-label);
+      font-size: 1rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+
+    .bird:hover span {
+      color: var(--accent);
+    }
+
+    /* ---------- BUTTON & LINKS ---------- */
+    .email {
+      font-family: var(--font-label);
+      font-weight: 400;
+      font-size: clamp(1.4rem, 4vw, 2.1rem);
+      color: var(--accent);
+      text-decoration: underline;
+      text-decoration-color: var(--violet-soft);
+      text-decoration-thickness: 3px;
+      text-underline-offset: 6px;
+      transition: text-decoration-color 0.25s, text-underline-offset 0.25s;
+    }
+
+    .email:hover {
+      text-decoration-color: var(--accent);
+      text-underline-offset: 11px;
+    }
+
+    /* ---------- INSTAGRAM LINK ---------- */
+    .social {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .social-icon {
+      display: grid;
+      place-items: center;
+      width: 56px;
+      height: 56px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      color: var(--accent);
+      transition: background 0.25s, color 0.25s, transform 0.35s cubic-bezier(0.3, 1.8, 0.5, 1);
+    }
+
+    .social-icon svg {
+      width: 26px;
+      height: 26px;
+    }
+
+    .social-handle {
+      font-family: var(--font-label);
+      font-size: 1.25rem;
+      letter-spacing: 0.04em;
+      transition: color 0.25s;
+    }
+
+    /* Hover: the icon fills with red and tilts, the handle turns red */
+    .social:hover .social-icon,
+    .social:focus-visible .social-icon {
+      background: var(--accent);
+      color: var(--on-accent);
+      transform: translateY(-4px) rotate(-8deg);
+    }
+
+    .social:hover .social-handle,
+    .social:focus-visible .social-handle {
+      color: var(--accent);
+    }
+
+    /* ---------- MAGIC GLOW ----------
+       Hover over anything red and it lights up: it turns a brighter red and
+       gives off a soft glow. Change --accent-glow at the top to change the color. */
+    @media (hover: hover) {
+      /* red text */
+      nav a,
+      .year,
+      .role,
+      .hl {
+        transition: color 0.35s, text-shadow 0.35s;
+      }
+
+      nav a:hover,
+      nav a:focus-visible,
+      .year:hover,
+      .role:hover,
+      .hl:hover,
+      .social:hover .social-handle,
+      .social:focus-visible .social-handle,
+      .bird:hover span,
+      .email:hover {
+        color: var(--accent-glow);
+        text-shadow:
+          0 0 6px rgba(255, 107, 95, 0.9),
+          0 0 18px rgba(255, 107, 95, 0.55),
+          0 0 38px rgba(255, 107, 95, 0.35);
+      }
+
+      .email {
+        transition: color 0.35s, text-shadow 0.35s, text-decoration-color 0.25s, text-underline-offset 0.25s;
+      }
+
+      .social-handle {
+        transition: color 0.35s, text-shadow 0.35s;
+      }
+
+      .bird span {
+        transition: color 0.35s, text-shadow 0.35s;
+      }
+
+      /* the two bars at the top */
+      .bar {
+        transition: background 0.35s, box-shadow 0.35s;
+      }
+
+      .bar:hover {
+        background: var(--accent-glow);
+        box-shadow:
+          0 0 12px 2px rgba(255, 107, 95, 0.85),
+          0 0 36px 6px rgba(255, 107, 95, 0.45);
+      }
+
+      /* the line with the dot next to "Digital illustrator" */
+      .role .line,
+      .role .line::before {
+        transition: background 0.35s, box-shadow 0.35s;
+      }
+
+      .role:hover .line,
+      .role:hover .line::before {
+        background: var(--accent-glow);
+        box-shadow: 0 0 12px 2px rgba(255, 107, 95, 0.85);
+      }
+
+      /* red doodles */
+      .doodle.red {
+        z-index: 2;                    /* above the title layer, so the mouse can reach them */
+        pointer-events: auto;          /* these ones can be hovered */
+      }
+
+      .doodle.red svg {
+        transition: filter 0.35s;
+      }
+
+      .doodle.red:hover svg {
+        filter: brightness(1.3) drop-shadow(0 0 8px rgba(255, 107, 95, 0.95)) drop-shadow(0 0 22px rgba(255, 107, 95, 0.6));
+      }
+
+      /* the spinning badge */
+      .badge {
+        transition: transform 0.4s cubic-bezier(0.3, 1.8, 0.5, 1), filter 0.35s;
+      }
+
+      .badge:hover,
+      .badge:focus-visible {
+        filter: drop-shadow(0 0 10px rgba(255, 107, 95, 0.9)) drop-shadow(0 0 26px rgba(255, 107, 95, 0.55));
+      }
+
+      .badge-core {
+        transition: background 0.35s;
+      }
+
+      .badge:hover .badge-core {
+        background: var(--accent-glow);
+      }
+
+      /* the squiggle under each heading lights up when you hover the heading */
+      h2::after {
+        transition: filter 0.35s;
+      }
+
+      h2:hover::after {
+        filter: brightness(1.45) drop-shadow(0 0 6px rgba(255, 107, 95, 0.95)) drop-shadow(0 0 16px rgba(255, 107, 95, 0.55));
+      }
+
+      /* artworks: the colored block behind them glows, and so does the title label */
+      .art:hover,
+      .art:focus-visible {
+        box-shadow: 8px 8px 0 var(--tint, var(--accent)), 10px 10px 40px var(--tint-glow, transparent);
+      }
+
+      .art .cap {
+        transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1), box-shadow 0.35s;
+      }
+
+      .art:hover .cap {
+        box-shadow: 0 0 14px rgba(255, 107, 95, 0.85);
+      }
+
+      /* Instagram icon and viewer buttons */
+      .social-icon {
+        transition: background 0.25s, color 0.25s, transform 0.35s cubic-bezier(0.3, 1.8, 0.5, 1), box-shadow 0.35s;
+      }
+
+      .social:hover .social-icon,
+      .social:focus-visible .social-icon,
+      .lb-btn:hover {
+        background: var(--accent-glow);
+        box-shadow:
+          0 0 14px rgba(255, 107, 95, 0.85),
+          0 0 36px rgba(255, 107, 95, 0.45);
+      }
+
+      .lb-btn {
+        transition: background 0.2s, color 0.2s, transform 0.25s cubic-bezier(0.3, 1.8, 0.5, 1), box-shadow 0.35s;
+      }
+    }
+
+    /* ---------- CUSTOM CURSOR ----------
+       Only appears with a real mouse. It becomes a big "View" blob over artworks. */
+    .cursor {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 50;
+      width: 14px;
+      height: 14px;
+      margin: -7px 0 0 -7px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      background: var(--accent);
+      display: grid;
+      place-items: center;
+      font-family: var(--font-label);
+      font-weight: 500;
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: transparent;
+      pointer-events: none;
+      opacity: 0;
+      transition: width 0.3s cubic-bezier(0.3, 1.5, 0.5, 1), height 0.3s cubic-bezier(0.3, 1.5, 0.5, 1),
+                  margin 0.3s cubic-bezier(0.3, 1.5, 0.5, 1), background 0.2s, color 0.2s, opacity 0.2s;
+    }
+
+    .cursor.on   { opacity: 1; }
+
+    .cursor.link {
+      width: 40px;
+      height: 40px;
+      margin: -20px 0 0 -20px;
+      background: transparent;
+    }
+
+    .cursor.big {
+      width: 88px;
+      height: 88px;
+      margin: -44px 0 0 -44px;
+      color: var(--on-accent);
+    }
+
+    /* hide the normal arrow only over artworks, where the blob takes over */
+    .has-cursor .art,
+    .has-cursor .bird {
+      cursor: none;
+    }
+
+    /* ---------- FOOTER ---------- */
+    footer {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 48px 40px 60px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* ---------- LIGHTBOX (the pop-up that shows an artwork big) ---------- */
+    .lightbox {
+      max-width: 94vw;
+      margin: auto;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      overflow: visible;
+      color: var(--text);
+    }
+
+    .lightbox::backdrop {
+      background: rgba(14, 10, 34, 0.95);
+    }
+
+    .lightbox[open] {
+      animation: pop 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+    }
+
+    @keyframes pop {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+    }
+
+    .lightbox figure {
+      text-align: center;
+    }
+
+    .lightbox img {
+      display: block;
+      max-width: min(88vw, 960px);
+      max-height: 76vh;
+      margin: 0 auto;
+      border-radius: 8px;
+    }
+
+    .lightbox figcaption {
+      margin-top: 16px;
+      font-family: var(--font-label);
+      font-size: 1.3rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .lb-btn {
+      position: fixed;
+      width: 48px;
+      height: 48px;
+      padding: 0 0 4px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--accent);
+      font-size: 1.7rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, transform 0.25s cubic-bezier(0.3, 1.8, 0.5, 1);
+    }
+
+    .lb-btn:hover {
+      background: var(--accent);
+      color: var(--on-accent);
+      transform: scale(1.1);
+    }
+
+    .lb-close { top: 20px; right: 24px; }
+    .lb-prev  { left: 24px;  top: calc(50% - 24px); }
+    .lb-next  { right: 24px; top: calc(50% - 24px); }
+
+    /* ---------- PHONES & TABLETS ---------- */
+    @media (max-width: 900px) {
+      :root { --overlap: 30px; }
+      /* flexible rows so a last row with fewer birds is centered, not left-aligned */
+      .bird-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 28px 20px;
+      }
+      .bird { width: calc((100% - 40px) / 3); }
+    }
+
+    /* Touch screens (phones and tablets): bigger menu links that are easy to tap */
+    @media (hover: none), (max-width: 760px) {
+      .site-header { padding: 6px 0; }
+      nav { gap: 6px; }
+      nav a { padding: 12px 8px; }          /* each link is at least 44px tall */
+      nav a::after { bottom: 7px; left: 8px; }
+      nav a:hover::after,
+      nav a:focus-visible::after { width: calc(100% - 16px); }
+    }
+
+    @media (max-width: 760px) {
+      :root { --overlap: 80px; }   /* on phones the photo climbs a little into the hero */
+      .bar { display: none; }
+      .site-header { justify-content: center; padding: 2px 8px; }
+      nav a { font-size: 0.95rem; }
+
+      .hero { padding-left: 20px; padding-right: 20px; }
+      .role .line { display: none; }
+      .doodle.hide-sm { display: none; }
+      .badge { top: 44px; }
+
+      .about-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 0 20px;
+      }
+      .portrait { max-width: 340px; border-bottom: 8px solid var(--accent); }   /* a red "floor" for the photo to sit on */
+      .about-text { padding: 40px 0 56px; }
+
+      .section { padding: 56px 20px; }
+      .narrow { margin-left: 0; }   /* the section's own 20px padding does the spacing */
+      footer { padding-left: 20px; padding-right: 20px; }
+    }
+
+    @media (max-width: 600px) {
+      .bird { width: calc((100% - 20px) / 2); }
+      .lb-prev, .lb-next { top: auto; bottom: 24px; }
+    }
+
+    /* If someone's device asks for less motion, switch animations off */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ============================================================
+       HTML: the content of the site.
+       ============================================================ -->
+
+  <!-- Shapes used by the doodles (defined once, reused many times) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="sparkle" viewBox="0 0 100 100">
+        <path d="M50 0 C54 34 66 46 100 50 C66 54 54 66 50 100 C46 66 34 54 0 50 C34 46 46 34 50 0Z" fill="currentColor"/>
+      </symbol>
+      <symbol id="squiggle" viewBox="0 0 130 28">
+        <path d="M4 14 Q19 -2 34 14 T64 14 T94 14 T124 14" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="ring" viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="24" fill="none" stroke="currentColor" stroke-width="6"/>
+      </symbol>
+      <symbol id="dots" viewBox="0 0 80 40">
+        <circle cx="10" cy="20" r="8" fill="currentColor"/>
+        <circle cx="40" cy="20" r="8" fill="currentColor"/>
+        <circle cx="70" cy="20" r="8" fill="currentColor"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- TOP BAR: two red bars with the menu in between -->
+  <header class="site-header" id="header">
+    <span class="bar" aria-hidden="true"></span>
+    <nav>
+      <a href="#about">About</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#birds">Birds</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <span class="bar" aria-hidden="true"></span>
+  </header>
+
+  <main id="top">
+
+    <!-- HERO: the big title.
+         JavaScript splits the words with data-split into single letters,
+         so each letter can hop on hover. -->
+    <section class="hero">
+
+      <!-- Floating doodles. Change the position (top/left/right/bottom), size (width),
+           color, or delete any line you don't like. data-depth = how much it follows your mouse. -->
+      <span class="doodle red" aria-hidden="true" data-depth="40" style="--dur:6s; left:60%; top:14%; width:clamp(28px,4vw,60px); color:var(--accent)"><svg viewBox="0 0 100 100"><use href="#sparkle"/></svg></span>
+      <span class="doodle" aria-hidden="true" data-depth="28" style="--dur:7.5s; left:37%; top:11%; width:clamp(16px,2vw,28px); color:var(--violet-soft)"><svg viewBox="0 0 100 100"><use href="#sparkle"/></svg></span>
+      <span class="doodle" aria-hidden="true" data-depth="26" style="--dur:5.5s; right:4%; top:56%; width:clamp(18px,2.4vw,36px); color:var(--violet-soft)"><svg viewBox="0 0 100 100"><use href="#sparkle"/></svg></span>
+      <span class="doodle red hide-sm" aria-hidden="true" data-depth="34" style="--dur:8s; right:10%; bottom:27%; width:clamp(70px,9vw,130px); color:var(--accent)"><svg viewBox="0 0 130 28"><use href="#squiggle"/></svg></span>
+      <span class="doodle hide-sm" aria-hidden="true" data-depth="20" style="--dur:7s; left:3%; top:52%; width:clamp(24px,3vw,44px); color:var(--violet-bright)"><svg viewBox="0 0 60 60"><use href="#ring"/></svg></span>
+      <span class="doodle red hide-sm" aria-hidden="true" data-depth="30" style="--dur:6.5s; left:44%; bottom:15%; width:clamp(40px,5vw,70px); color:var(--accent)"><svg viewBox="0 0 80 40"><use href="#dots"/></svg></span>
+
+      <!-- Spinning badge. It's a link down to the gallery. -->
+      <a class="badge" href="#gallery" aria-label="See the gallery">
+        <svg class="badge-ring" viewBox="0 0 160 160" aria-hidden="true">
+          <defs><path id="badge-path" d="M80,80 m-58,0 a58,58 0 1,1 116,0 a58,58 0 1,1 -116,0"/></defs>
+          <text><textPath href="#badge-path" textLength="358" lengthAdjust="spacing">Digital illustration &#8226; Whimsy &amp; color &#8226; </textPath></text>
+        </svg>
+        <span class="badge-core">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M5 13l7 7 7-7"/></svg>
+        </span>
+      </a>
+
+
+      <div class="hero-inner">
+        <p class="year">2026</p>
+
+        <h1 aria-label="Viko Portfolio">
+          <span class="serif split" data-split data-start="0">Viko</span>
+          <span class="condensed split" data-split data-start="4">Portfolio</span>
+        </h1>
+
+        <p class="role">
+          Digital Illustrator
+          <span class="line" aria-hidden="true"></span>
+        </p>
+      </div>
+    </section>
+
+    <!-- ABOUT: the purple band with your photo.
+         Your photo is images/me.png. It is already cut out, turned to face the text,
+         and has its white outline built in, so no extra styling is needed.
+         Don't want a photo? Delete the whole <figure class="portrait"> block. -->
+    <section id="about" class="about-band">
+      <div class="about-grid">
+        <figure class="portrait">
+          <img src="images/me.png" alt="Portrait of Viko" data-ph data-kind="portrait">
+        </figure>
+
+        <div class="about-text">
+          <p>Hey, I'm Viko.</p>
+          <p>I'm a <span class="hl">digital illustrator</span> who creates <span class="hl">whimsical worlds and characters</span>.</p>
+          <p>At the moment, I'm <span class="hl">open to commission work, book cover illustrations, and illustrations for brands</span>.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="strip" aria-hidden="true"></div>
+
+    <!-- GALLERY
+         HOW IMAGES WORK: each <img> points to a file in your "images" folder.
+         Until you add your real files, a colorful placeholder shows up instead.
+         To use your art: save it as images/art-1.jpg, art-2.jpg ... and refresh.
+         Change data-title to rename a piece, and alt to describe it.
+         (data-w and data-h only shape the placeholder, you can ignore them.)
+         The pictures are placed in order, left to right, each one into the shortest column.
+         To change the order, cut and paste a whole <button>...</button> block up or down. -->
+    <div class="gallery-band">
+    <section id="gallery" class="section">
+      <h2>Selected work</h2>
+      <p class="lede">Click any piece to see it bigger.</p>
+
+      <div class="gallery">
+        <button class="art" data-group="gallery" data-title="Artwork 1" style="--tint: var(--accent); --tint-glow: rgba(255, 107, 95, 0.55)">
+          <img src="images/art-1.jpg" alt="Artwork 1" data-ph data-kind="art" data-i="0" data-w="800" data-h="1000">
+          <span class="cap">Artwork 1</span>
+        </button>
+
+        <button class="art" data-group="gallery" data-title="Artwork 2" style="--tint: var(--violet-bright); --tint-glow: rgba(110, 70, 255, 0.6)">
+          <img src="images/art-2.jpg" alt="Artwork 2" data-ph data-kind="art" data-i="1" data-w="1000" data-h="760">
+          <span class="cap">Artwork 2</span>
+        </button>
+
+        <button class="art" data-group="gallery" data-title="Artwork 3" style="--tint: var(--accent); --tint-glow: rgba(255, 107, 95, 0.55)">
+          <img src="images/art-3.jpg" alt="Artwork 3" data-ph data-kind="art" data-i="2" data-w="900" data-h="900">
+          <span class="cap">Artwork 3</span>
+        </button>
+
+        <button class="art" data-group="gallery" data-title="Artwork 4" style="--tint: var(--violet-bright); --tint-glow: rgba(110, 70, 255, 0.6)">
+          <img src="images/art-4.jpg" alt="Artwork 4" data-ph data-kind="art" data-i="3" data-w="800" data-h="1120">
+          <span class="cap">Artwork 4</span>
+        </button>
+
+        <button class="art" data-group="gallery" data-title="Artwork 5" style="--tint: var(--accent); --tint-glow: rgba(255, 107, 95, 0.55)">
+          <img src="images/art-5.jpg" alt="Artwork 5" data-ph data-kind="art" data-i="4" data-w="1000" data-h="700">
+          <span class="cap">Artwork 5</span>
+        </button>
+
+        <button class="art" data-group="gallery" data-title="Artwork 6" style="--tint: var(--violet-bright); --tint-glow: rgba(110, 70, 255, 0.6)">
+          <img src="images/art-6.jpg" alt="Artwork 6" data-ph data-kind="art" data-i="5" data-w="860" data-h="1000">
+          <span class="cap">Artwork 6</span>
+        </button>
+      </div>
+    </section>
+    </div>
+
+    <!-- BIRD COLLECTION: files are images/bird-1.jpg ... bird-5.jpg
+         Rename each bird by editing the text inside <span> and data-title. -->
+    <section id="birds" class="section">
+      <h2>Latest collection: Birds in Boots</h2>
+      <p class="lede">Five birds, five little personalities.</p>
+
+      <div class="bird-row">
+        <button class="bird" data-group="birds" data-title="European robin">
+          <img src="images/bird-1.jpg" alt="European robin" data-ph data-kind="bird" data-i="0">
+          <span>European robin</span>
+        </button>
+        <button class="bird" data-group="birds" data-title="Great tit">
+          <img src="images/bird-2.jpg" alt="Great tit" data-ph data-kind="bird" data-i="1">
+          <span>Great tit</span>
+        </button>
+        <button class="bird" data-group="birds" data-title="Raven">
+          <img src="images/bird-3.jpg" alt="Raven" data-ph data-kind="bird" data-i="2">
+          <span>Raven</span>
+        </button>
+        <button class="bird" data-group="birds" data-title="Pigeon">
+          <img src="images/bird-4.jpg" alt="Pigeon" data-ph data-kind="bird" data-i="3">
+          <span>Pigeon</span>
+        </button>
+        <button class="bird" data-group="birds" data-title="Himalayan tit">
+          <img src="images/bird-5.jpg" alt="Himalayan tit" data-ph data-kind="bird" data-i="4">
+          <span>Himalayan tit</span>
+        </button>
+      </div>
+    </section>
+
+
+    <!-- CONTACT: replace the email address in BOTH places -->
+    <section id="contact" class="section narrow">
+      <h2>Contact</h2>
+      <p>For commissions and collaborations, write to me at</p>
+      <a href="mailto:viktoriia.sviata@gmail.com" class="email">viktoriia.sviata@gmail.com</a>
+
+      <!-- Instagram: the icon is drawn right here (no image file needed) -->
+      <div>
+        <a class="social" href="https://www.instagram.com/vikoviko_art/" target="_blank" rel="noopener noreferrer" aria-label="Viko on Instagram (opens in a new tab)">
+          <span class="social-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="5"/>
+              <circle cx="12" cy="12" r="4.2"/>
+              <circle cx="17.3" cy="6.7" r="0.6" fill="currentColor"/>
+            </svg>
+          </span>
+          <span class="social-handle">@vikoviko_art</span>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Viko</p>
+  </footer>
+
+  <!-- The custom cursor (JavaScript moves it; it only shows with a mouse) -->
+  <div class="cursor" id="cursor" aria-hidden="true">View</div>
+
+  <!-- LIGHTBOX: the pop-up viewer. It stays hidden until you click an artwork. -->
+  <dialog id="lightbox" class="lightbox" aria-label="Artwork viewer">
+    <button class="lb-btn lb-close" aria-label="Close">&times;</button>
+    <button class="lb-btn lb-prev" aria-label="Previous artwork">&lsaquo;</button>
+    <figure>
+      <img id="lb-img" alt="">
+      <figcaption id="lb-title"></figcaption>
+    </figure>
+    <button class="lb-btn lb-next" aria-label="Next artwork">&rsaquo;</button>
+  </dialog>
+
+  <!-- ============================================================
+       JAVASCRIPT: the behavior of the site.
+       (When you split into separate files later, this goes in script.js)
+       ============================================================ -->
+  <script>
+    // ---------- 1. TOP BAR: add a thin line once you scroll down ----------
+    const header = document.getElementById('header');
+
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 10);
+    });
+
+
+    // ---------- 2. BIG TITLE: split words into single letters ----------
+    // "Viko" becomes four <span>s (V, i, k, o) so each can hop on its own.
+    document.querySelectorAll('[data-split]').forEach(word => {
+      const text = word.textContent.trim();
+      const start = Number(word.dataset.start || 0);   // delays the animation order
+      word.textContent = '';
+      word.setAttribute('aria-hidden', 'true');        // the <h1> already has a label
+
+      Array.from(text).forEach((letter, i) => {
+        const span = document.createElement('span');
+        span.textContent = letter;
+        span.style.setProperty('--i', start + i);
+        word.appendChild(span);
+      });
+    });
+
+
+    // ---------- 3. PLACEHOLDER ART ----------
+    // If an image file can't be found in your "images" folder, we draw a
+    // colorful stand-in instead. Once your real files are there, the real
+    // art shows automatically and this code does nothing.
+
+    const SOFT   = ['#ffe3e3', '#fff3bf', '#d3f9d8', '#d0ebff', '#e5dbff', '#ffe8cc'];
+    const BRIGHT = ['#ff6b6b', '#fcc419', '#38d9a9', '#4dabf7', '#9775fa', '#ff922b'];
+    const INK = '#24213a';
+
+    // A friendly blob character on a colorful background
+    function artSVG(i, w, h) {
+      const bg = SOFT[i % 6];
+      const a = BRIGHT[i % 6];
+      const b = BRIGHT[(i + 2) % 6];
+      const c = BRIGHT[(i + 4) % 6];
+      const m = Math.min(w, h);
+      const cx = w * 0.5;
+      const cy = h * 0.56;
+      const r = m * 0.24;
+
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+          <rect width="${w}" height="${h}" fill="${bg}"/>
+          <circle cx="${w * 0.2}" cy="${h * 0.17}" r="${m * 0.11}" fill="${b}"/>
+          <circle cx="${w * 0.84}" cy="${h * 0.3}" r="${m * 0.07}" fill="${c}"/>
+          <path d="M0 ${h * 0.84} Q ${w * 0.25} ${h * 0.74} ${w * 0.5} ${h * 0.84} T ${w} ${h * 0.84} V ${h} H 0 Z" fill="${c}" opacity="0.6"/>
+          <line x1="${cx}" y1="${cy - r * 1.05}" x2="${cx + r * 0.2}" y2="${cy - r * 1.55}" stroke="${INK}" stroke-width="${m * 0.012}" stroke-linecap="round"/>
+          <circle cx="${cx + r * 0.2}" cy="${cy - r * 1.6}" r="${m * 0.03}" fill="${b}"/>
+          <ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r * 1.08}" fill="${a}"/>
+          <circle cx="${cx - r * 0.38}" cy="${cy - r * 0.15}" r="${r * 0.12}" fill="${INK}"/>
+          <circle cx="${cx + r * 0.38}" cy="${cy - r * 0.15}" r="${r * 0.12}" fill="${INK}"/>
+          <path d="M ${cx - r * 0.3} ${cy + r * 0.25} Q ${cx} ${cy + r * 0.6} ${cx + r * 0.3} ${cy + r * 0.25}" fill="none" stroke="${INK}" stroke-width="${m * 0.012}" stroke-linecap="round"/>
+          <circle cx="${cx - r * 0.65}" cy="${cy + r * 0.2}" r="${r * 0.13}" fill="#fff" opacity="0.55"/>
+          <circle cx="${cx + r * 0.65}" cy="${cy + r * 0.2}" r="${r * 0.13}" fill="#fff" opacity="0.55"/>
+          <text x="${w / 2}" y="${h * 0.94}" text-anchor="middle" font-family="sans-serif" font-size="${m * 0.04}" fill="${INK}" opacity="0.5">placeholder: art-${i + 1}.jpg</text>
+        </svg>`;
+    }
+
+    // A round little bird
+    function birdSVG(i) {
+      const bg = SOFT[(i + 3) % 6];
+      const body = BRIGHT[i % 6];
+      const wing = BRIGHT[(i + 2) % 6];
+
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 400 400">
+          <rect width="400" height="400" fill="${bg}"/>
+          <polygon points="110,225 45,190 60,255" fill="${wing}"/>
+          <line x1="180" y1="305" x2="175" y2="350" stroke="#ff922b" stroke-width="8" stroke-linecap="round"/>
+          <line x1="225" y1="305" x2="228" y2="350" stroke="#ff922b" stroke-width="8" stroke-linecap="round"/>
+          <ellipse cx="205" cy="225" rx="115" ry="95" fill="${body}"/>
+          <ellipse cx="215" cy="252" rx="70" ry="52" fill="#fff" opacity="0.35"/>
+          <ellipse cx="165" cy="225" rx="52" ry="32" transform="rotate(-20 165 225)" fill="${wing}"/>
+          <circle cx="265" cy="190" r="13" fill="${INK}"/>
+          <circle cx="269" cy="185" r="4" fill="#fff"/>
+          <polygon points="305,195 355,213 305,230" fill="#ff922b"/>
+          <path d="M200 135 q-5 -35 12 -45 M216 133 q5 -30 25 -35" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/>
+          <text x="200" y="374" text-anchor="middle" font-family="sans-serif" font-size="14" fill="${INK}" opacity="0.5">placeholder: bird-${i + 1}.jpg</text>
+        </svg>`;
+    }
+
+    // A simple cut-out silhouette for the about photo (transparent background)
+    function portraitSVG() {
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" width="800" height="1040" viewBox="0 0 400 520">
+          <path d="M20 520 C 20 400 90 345 200 345 C 310 345 380 400 380 520 Z" fill="#8f6bff"/>
+          <rect x="170" y="290" width="60" height="70" rx="20" fill="#c9b8ff"/>
+          <ellipse cx="200" cy="215" rx="95" ry="115" fill="#c9b8ff"/>
+          <path d="M104 205 C 100 95 300 95 296 205 C 270 150 130 150 104 205 Z" fill="${INK}"/>
+          <circle cx="165" cy="225" r="9" fill="${INK}"/>
+          <circle cx="235" cy="225" r="9" fill="${INK}"/>
+          <path d="M165 268 Q 200 300 235 268" fill="none" stroke="${INK}" stroke-width="8" stroke-linecap="round"/>
+          <text x="200" y="470" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#fff" opacity="0.7">placeholder: me.png</text>
+        </svg>`;
+    }
+
+    // Turn the SVG drawing into something an <img> can display
+    function svgToUri(svg) {
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+
+    function usePlaceholder(img) {
+      const i = Number(img.dataset.i);
+      if (img.dataset.kind === 'bird') {
+        img.src = svgToUri(birdSVG(i));
+      } else if (img.dataset.kind === 'portrait') {
+        img.classList.add('is-placeholder');
+        img.src = svgToUri(portraitSVG());
+      } else {
+        img.src = svgToUri(artSVG(i, Number(img.dataset.w), Number(img.dataset.h)));
+      }
+    }
+
+    document.querySelectorAll('img[data-ph]').forEach(img => {
+      // If the file is missing, the browser fires an "error" event
+      img.addEventListener('error', () => usePlaceholder(img), { once: true });
+      // In case it already failed before this code ran
+      if (img.complete && img.naturalWidth === 0) usePlaceholder(img);
+    });
+
+
+    // ---------- 4. GALLERY LAYOUT ----------
+    // Builds 3 columns (2 on tablets, 1 on phones) and puts each picture into the
+    // shortest column, so the gallery has no big empty spaces.
+    const gallery = document.querySelector('.gallery');
+    const galleryItems = Array.from(gallery.children);                 // the 6 picture buttons
+    const galleryImages = galleryItems.map(item => item.querySelector('img'));
+    let lastColumnCount = 0;
+
+    // remember the original order (the lightbox uses it for the arrow buttons)
+    galleryItems.forEach((item, i) => { item.dataset.order = i; });
+
+    function columnCount() {
+      if (window.innerWidth <= 600) return 1;
+      if (window.innerWidth <= 900) return 2;
+      return 3;
+    }
+
+    function allLoaded() {
+      return galleryImages.every(img => img.complete && img.naturalWidth > 0);
+    }
+
+    function layoutGallery() {
+      const count = columnCount();
+      const measured = allLoaded();      // we only know the real heights once the images are loaded
+      lastColumnCount = count;
+
+      gallery.innerHTML = '';
+      const columns = [];
+      for (let i = 0; i < count; i++) {
+        const column = document.createElement('div');
+        column.className = 'gallery-col';
+        gallery.appendChild(column);
+        columns.push(column);
+      }
+
+      galleryItems.forEach((item, i) => {
+        // before the images are loaded: simple round-robin. After: the shortest column wins.
+        const target = measured
+          ? columns.reduce((a, b) => (a.offsetHeight <= b.offsetHeight ? a : b))
+          : columns[i % count];
+        target.appendChild(item);
+      });
+    }
+
+    layoutGallery();
+    galleryImages.forEach(img => {
+      img.addEventListener('load', () => { if (allLoaded()) layoutGallery(); });
+    });
+
+    window.addEventListener('resize', () => {
+      if (columnCount() !== lastColumnCount) layoutGallery();
+    });
+
+
+    // ---------- 5. LIGHTBOX: click an artwork to see it big ----------
+    const lightbox = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lb-img');
+    const lbTitle = document.getElementById('lb-title');
+
+    let group = [];   // the list of artworks we can flip through
+    let index = 0;    // which one we are looking at
+
+    function showCurrent() {
+      const button = group[index];
+      const img = button.querySelector('img');
+      lbImg.src = img.currentSrc || img.src;
+      lbImg.alt = img.alt;
+      lbTitle.textContent = button.dataset.title;
+    }
+
+    function step(direction) {
+      // The % makes it loop: after the last one, back to the first
+      index = (index + direction + group.length) % group.length;
+      showCurrent();
+    }
+
+    // Clicking an artwork (or a bird) opens the viewer
+    document.querySelectorAll('[data-group]').forEach(button => {
+      button.addEventListener('click', () => {
+        group = Array.from(document.querySelectorAll(`[data-group="${button.dataset.group}"]`))
+          .sort((a, b) => (Number(a.dataset.order) || 0) - (Number(b.dataset.order) || 0));   // original order
+        index = group.indexOf(button);
+        showCurrent();
+        lightbox.showModal();
+      });
+    });
+
+    lightbox.querySelector('.lb-close').addEventListener('click', () => lightbox.close());
+    lightbox.querySelector('.lb-prev').addEventListener('click', () => step(-1));
+    lightbox.querySelector('.lb-next').addEventListener('click', () => step(1));
+
+    // Click on the empty space around the picture to close
+    lightbox.addEventListener('click', event => {
+      if (event.target === lightbox) lightbox.close();
+    });
+
+    // Arrow keys flip through; Esc closes (the browser does Esc for us)
+    document.addEventListener('keydown', event => {
+      if (!lightbox.open) return;
+      if (event.key === 'ArrowLeft') step(-1);
+      if (event.key === 'ArrowRight') step(1);
+    });
+
+    // ---------- 6. DOODLES: drift a little when the mouse moves over the hero ----------
+    const hero = document.querySelector('.hero');
+    const doodles = Array.from(document.querySelectorAll('.doodle'));
+    const hasMouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    if (hasMouse) {
+      hero.addEventListener('mousemove', event => {
+        const box = hero.getBoundingClientRect();
+        const x = (event.clientX - box.left) / box.width - 0.5;    // -0.5 (left) to 0.5 (right)
+        const y = (event.clientY - box.top) / box.height - 0.5;    // -0.5 (top)  to 0.5 (bottom)
+
+        doodles.forEach(doodle => {
+          const depth = Number(doodle.dataset.depth || 20);
+          doodle.style.transform = `translate(${x * depth}px, ${y * depth}px)`;
+        });
+      });
+
+      hero.addEventListener('mouseleave', () => {
+        doodles.forEach(doodle => { doodle.style.transform = ''; });
+      });
+    }
+
+
+    // ---------- 7. CUSTOM CURSOR ----------
+    const cursor = document.getElementById('cursor');
+
+    if (hasMouse) {
+      let targetX = 0, targetY = 0;   // where the mouse really is
+      let x = 0, y = 0;               // where the cursor blob is (it lags behind a little)
+
+      document.addEventListener('mousemove', event => {
+        targetX = event.clientX;
+        targetY = event.clientY;
+        cursor.classList.add('on');
+        document.body.classList.add('has-cursor');
+      });
+
+      document.addEventListener('mouseleave', () => cursor.classList.remove('on'));
+
+      // Change the blob's shape depending on what the mouse is over
+      document.addEventListener('mouseover', event => {
+        const overArt = event.target.closest('.art, .bird');
+        const overLink = event.target.closest('a, button');
+        cursor.classList.toggle('big', Boolean(overArt));
+        cursor.classList.toggle('link', Boolean(overLink) && !overArt);
+      });
+
+      function moveCursor() {
+        x += (targetX - x) * 0.2;      // move 20% of the way each frame = smooth glide
+        y += (targetY - y) * 0.2;
+        cursor.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        requestAnimationFrame(moveCursor);
+      }
+      moveCursor();
+    }
+
+  </script>
+
+</body>
+</html>
