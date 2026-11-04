@@ -21,6 +21,7 @@
        Change a color here and it changes everywhere on the site. */
     :root {
       --ink: #0e0a22;            /* the deep dark background */
+      --gallery-bg: #150f38;     /* the slightly lighter band behind the gallery */
       --violet: #3d11a0;         /* the purple about band */
       --violet-bright: #5b2be0;  /* big serif title */
       --violet-soft: #9b7bff;
@@ -437,7 +438,7 @@
       position: relative;
       z-index: 1;
       height: 70px;
-      background: linear-gradient(180deg, var(--accent) 0, var(--accent) 14px, var(--ink) 100%);
+      background: linear-gradient(180deg, var(--accent) 0, var(--accent) 14px, var(--gallery-bg) 100%);
     }
 
 
@@ -490,10 +491,11 @@
        so the pieces stand out from the page. */
     .gallery-band {
       background:
+        /* a flat cover at the very top, so the strip above blends in with no seam */
+        linear-gradient(180deg, var(--gallery-bg) 0, rgba(21, 15, 56, 0) 170px),
         radial-gradient(ellipse 70% 45% at 50% 0%, rgba(91, 43, 224, 0.3), transparent 75%),
         radial-gradient(ellipse 60% 40% at 50% 100%, rgba(91, 43, 224, 0.18), transparent 75%),
-        #150f38;
-      border-top: 1px solid rgba(155, 123, 255, 0.2);
+        var(--gallery-bg);
       border-bottom: 1px solid rgba(155, 123, 255, 0.2);
     }
 
@@ -515,7 +517,6 @@
     }
 
     .art {
-      position: relative;
       display: block;
       width: 100%;
       margin: 0;
@@ -530,62 +531,19 @@
       outline: 1px solid rgba(255, 255, 255, 0.16);
       outline-offset: -1px;
       box-shadow: 0 18px 38px rgba(0, 0, 0, 0.5);
-      transition: transform 0.3s cubic-bezier(0.3, 1.5, 0.5, 1), box-shadow 0.3s, opacity 0.35s, filter 0.35s;
     }
 
-    /* While you look at one piece, the others step back a little */
-    @media (hover: hover) {
-      .gallery:hover .art:not(:hover):not(:focus-visible) {
-        opacity: 0.5;
-        filter: saturate(0.75);
-      }
-    }
-
-    /* Hover: the picture lifts up and a colored block appears behind it */
-    .art:hover,
+    /* The artwork itself has no hover animation, so it stays calm and easy to look at.
+       Keyboard users (Tab key) still get a clear outline around the selected piece. */
     .art:focus-visible {
-      transform: translate(-4px, -4px);
-      box-shadow: 8px 8px 0 var(--tint, var(--accent));
+      outline: 3px solid var(--accent-soft);
+      outline-offset: 4px;
     }
 
     .art img {
       display: block;
       width: 100%;
       height: auto;
-      transition: transform 0.6s ease;
-    }
-
-    .art:hover img {
-      transform: scale(1.04);
-    }
-
-    /* The title pops up from the bottom on hover */
-    .art .cap {
-      position: absolute;
-      left: 14px;
-      bottom: 14px;
-      padding: 5px 14px;
-      border-radius: 4px;
-      background: var(--accent);
-      color: var(--on-accent);
-      font-family: var(--font-label);
-      font-weight: 500;
-      font-size: 0.95rem;
-      letter-spacing: 0.05em;
-      line-height: 1.4;
-      text-transform: uppercase;
-      transform: translateY(160%);
-      transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
-    }
-
-    .art:hover .cap,
-    .art:focus-visible .cap {
-      transform: translateY(0);
-    }
-
-    /* On touch screens there is no hover, so always show the title */
-    @media (hover: none) {
-      .art .cap { transform: translateY(0); }
     }
 
     /* ---------- BIRD COLLECTION ---------- */
@@ -611,15 +569,6 @@
       aspect-ratio: 1 / 1;       /* a perfect square. Delete this line to show each picture in its own shape */
       object-fit: cover;
       border-radius: 8px;
-      box-shadow: 0 0 0 0 var(--accent);
-      transition: transform 0.35s cubic-bezier(0.3, 1.8, 0.5, 1), box-shadow 0.25s;
-    }
-
-    /* Hover: the bird hops up, tilts and gets a red ring */
-    .bird:hover img,
-    .bird:focus-visible img {
-      transform: translateY(-12px) rotate(-5deg) scale(1.04);
-      box-shadow: 0 0 0 5px var(--accent);
     }
 
     .bird span {
@@ -630,11 +579,6 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--muted);
-      transition: color 0.2s;
-    }
-
-    .bird:hover span {
-      color: var(--accent);
     }
 
     /* ---------- BUTTON & LINKS ---------- */
@@ -718,7 +662,6 @@
       .hl:hover,
       .social:hover .social-handle,
       .social:focus-visible .social-handle,
-      .bird:hover span,
       .email:hover {
         color: var(--accent-glow);
         text-shadow:
@@ -732,10 +675,6 @@
       }
 
       .social-handle {
-        transition: color 0.35s, text-shadow 0.35s;
-      }
-
-      .bird span {
         transition: color 0.35s, text-shadow 0.35s;
       }
 
@@ -804,20 +743,6 @@
         filter: brightness(1.45) drop-shadow(0 0 6px rgba(255, 107, 95, 0.95)) drop-shadow(0 0 16px rgba(255, 107, 95, 0.55));
       }
 
-      /* artworks: the colored block behind them glows, and so does the title label */
-      .art:hover,
-      .art:focus-visible {
-        box-shadow: 8px 8px 0 var(--tint, var(--accent)), 10px 10px 40px var(--tint-glow, transparent);
-      }
-
-      .art .cap {
-        transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1), box-shadow 0.35s;
-      }
-
-      .art:hover .cap {
-        box-shadow: 0 0 14px rgba(255, 107, 95, 0.85);
-      }
-
       /* Instagram icon and viewer buttons */
       .social-icon {
         transition: background 0.25s, color 0.25s, transform 0.35s cubic-bezier(0.3, 1.8, 0.5, 1), box-shadow 0.35s;
@@ -838,7 +763,7 @@
     }
 
     /* ---------- CUSTOM CURSOR ----------
-       Only appears with a real mouse. It becomes a big "View" blob over artworks. */
+       Only appears with a real mouse. It steps aside over artworks. */
     .cursor {
       position: fixed;
       left: 0;
@@ -873,17 +798,9 @@
       background: transparent;
     }
 
-    .cursor.big {
-      width: 88px;
-      height: 88px;
-      margin: -44px 0 0 -44px;
-      color: var(--on-accent);
-    }
-
-    /* hide the normal arrow only over artworks, where the blob takes over */
-    .has-cursor .art,
-    .has-cursor .bird {
-      cursor: none;
+    /* over the artwork the custom cursor steps aside, so you get the normal pointer */
+    .cursor.on-art {
+      opacity: 0;
     }
 
     /* ---------- FOOTER ---------- */
@@ -1145,34 +1062,28 @@
       <p class="lede">Click any piece to see it bigger.</p>
 
       <div class="gallery">
-        <button class="art" data-group="gallery" data-title="Artwork 1" style="--tint: var(--accent); --tint-glow: rgba(255, 107, 95, 0.55)">
+        <button class="art" data-group="gallery" data-title="Artwork 1">
           <img src="images/art-1.jpg" alt="Artwork 1" data-ph data-kind="art" data-i="0" data-w="800" data-h="1000">
-          <span class="cap">Artwork 1</span>
         </button>
 
-        <button class="art" data-group="gallery" data-title="Artwork 2" style="--tint: var(--violet-bright); --tint-glow: rgba(110, 70, 255, 0.6)">
+        <button class="art" data-group="gallery" data-title="Artwork 2">
           <img src="images/art-2.jpg" alt="Artwork 2" data-ph data-kind="art" data-i="1" data-w="1000" data-h="760">
-          <span class="cap">Artwork 2</span>
         </button>
 
-        <button class="art" data-group="gallery" data-title="Artwork 3" style="--tint: var(--accent); --tint-glow: rgba(255, 107, 95, 0.55)">
+        <button class="art" data-group="gallery" data-title="Artwork 3">
           <img src="images/art-3.jpg" alt="Artwork 3" data-ph data-kind="art" data-i="2" data-w="900" data-h="900">
-          <span class="cap">Artwork 3</span>
         </button>
 
-        <button class="art" data-group="gallery" data-title="Artwork 4" style="--tint: var(--violet-bright); --tint-glow: rgba(110, 70, 255, 0.6)">
+        <button class="art" data-group="gallery" data-title="Artwork 4">
           <img src="images/art-4.jpg" alt="Artwork 4" data-ph data-kind="art" data-i="3" data-w="800" data-h="1120">
-          <span class="cap">Artwork 4</span>
         </button>
 
-        <button class="art" data-group="gallery" data-title="Artwork 5" style="--tint: var(--accent); --tint-glow: rgba(255, 107, 95, 0.55)">
+        <button class="art" data-group="gallery" data-title="Artwork 5">
           <img src="images/art-5.jpg" alt="Artwork 5" data-ph data-kind="art" data-i="4" data-w="1000" data-h="700">
-          <span class="cap">Artwork 5</span>
         </button>
 
-        <button class="art" data-group="gallery" data-title="Artwork 6" style="--tint: var(--violet-bright); --tint-glow: rgba(110, 70, 255, 0.6)">
+        <button class="art" data-group="gallery" data-title="Artwork 6">
           <img src="images/art-6.jpg" alt="Artwork 6" data-ph data-kind="art" data-i="5" data-w="860" data-h="1000">
-          <span class="cap">Artwork 6</span>
         </button>
       </div>
     </section>
@@ -1237,7 +1148,7 @@
   </footer>
 
   <!-- The custom cursor (JavaScript moves it; it only shows with a mouse) -->
-  <div class="cursor" id="cursor" aria-hidden="true">View</div>
+  <div class="cursor" id="cursor" aria-hidden="true"></div>
 
   <!-- LIGHTBOX: the pop-up viewer. It stays hidden until you click an artwork. -->
   <dialog id="lightbox" class="lightbox" aria-label="Artwork viewer">
@@ -1508,6 +1419,7 @@
 
 
     // ---------- 7. CUSTOM CURSOR ----------
+    // A small red dot that follows the mouse. It grows into a ring over links and hides over artwork.
     const cursor = document.getElementById('cursor');
 
     if (hasMouse) {
@@ -1523,11 +1435,11 @@
 
       document.addEventListener('mouseleave', () => cursor.classList.remove('on'));
 
-      // Change the blob's shape depending on what the mouse is over
+      // Change the cursor's shape depending on what the mouse is over
       document.addEventListener('mouseover', event => {
         const overArt = event.target.closest('.art, .bird');
         const overLink = event.target.closest('a, button');
-        cursor.classList.toggle('big', Boolean(overArt));
+        cursor.classList.toggle('on-art', Boolean(overArt));   // over the artwork: normal pointer, no effects
         cursor.classList.toggle('link', Boolean(overLink) && !overArt);
       });
 
